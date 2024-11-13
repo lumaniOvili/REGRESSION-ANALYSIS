@@ -1,0 +1,180 @@
+---
+title: "ASS3"
+author: "Ifeakachukwu Ovili"
+date: "2024-11-03"
+output: word_document
+---
+QUESTION 1
+```{r}
+setwd("C:/Users/ifeak/Downloads")
+
+# Load the data
+table.data <- read.table("Assignment#2_Data_Prob1.txt", header = TRUE)
+attach(table.data)
+# Define the variables
+y <- table.data$y
+x1 <- table.data$x1
+x2 <- table.data$x2
+n <- length(y)
+```
+(a)
+```{r}
+# Fit the model
+fit <- lm(y ~ x1 + x2, data = table.data)
+
+# Display the summary of the model
+summary(fit)
+
+# Mean Squared Residual (MS.Res)
+MS.Res <- summary(fit)$sigma^2
+```
+(b)
+```{r}
+x.matrix <- cbind(1, x1, x2)
+p <- ncol(x.matrix)
+Hat.matrix <- x.matrix %*% solve(t(x.matrix) %*% x.matrix) %*% t(x.matrix)
+hii <- diag(Hat.matrix)  # Diagonal of Hat matrix
+
+# Plot leverage (hii)
+plot(hii, main = "Hat Values (Leverage)", ylab = "Leverage (hii)", xlab = "Index", pch = 20)
+abline(h = 2 * mean(hii), col = "red")  # Threshold line for high leverage
+
+```
+
+
+
+Yes, there appear to be high-leverage points in this plot, and these points could be influential depending on their residuals.
+
+(c)
+```{r}
+# Raw residuals
+ei <- residuals(fit)
+
+# Standardized residuals
+di <- ei / sqrt(MS.Res)
+
+# Studentized residuals
+ri <- ei / sqrt(MS.Res * (1 - hii))
+
+# PRESS residuals
+e_PRESS <- ei / (1 - hii)
+
+# R-student residuals (alternative studentized residuals)
+S2i <- ((n - p) * MS.Res - ei^2 / (1 - hii)) / (n - p - 1)
+ti <- ei / sqrt(S2i * (1 - hii))
+
+# Consolidate residuals into a data frame for easier output
+residuals_summary <- data.frame(
+  Raw = ei,
+  Standardized = di,
+  Studentized = ri,
+  PRESS = e_PRESS,
+  R_student = ti
+)
+print(residuals_summary)
+
+```
+(d)
+```{r}
+par(mfrow = c(3, 2))  # 3 rows, 2 columns for plotting
+
+# QQ Plot for raw residuals
+qqnorm(ei, main = "QQ Plot of Raw Residuals", pch = 20)
+qqline(ei, col = "red")
+
+# QQ Plot for standardized residuals
+qqnorm(di, main = "QQ Plot of Standardized Residuals", pch = 20)
+qqline(di, col = "red")
+
+# QQ Plot for studentized residuals
+qqnorm(ri, main = "QQ Plot of Studentized Residuals", pch = 20)
+qqline(ri, col = "red")
+
+# QQ Plot for PRESS residuals
+qqnorm(e_PRESS, main = "QQ Plot of PRESS Residuals", pch = 20)
+qqline(e_PRESS, col = "red")
+
+# QQ Plot for R-student residuals
+qqnorm(ti, main = "QQ Plot of R-student Residuals", pch = 20)
+qqline(ti, col = "red")
+
+# Set up residuals vs fitted plots
+par(mfrow = c(3, 2))  # 3 rows, 2 columns for plotting
+
+# Residuals vs Fitted for raw residuals
+plot(fitted(fit), ei, main = "Residuals vs Fitted (Raw)", xlab = "Fitted Values", ylab = "Raw Residuals", pch = 20)
+abline(h = 0, col = "red")
+
+# Residuals vs Fitted for standardized residuals
+plot(fitted(fit), di, main = "Residuals vs Fitted (Standardized)", xlab = "Fitted Values", ylab = "Standardized Residuals", pch = 20)
+abline(h = 0, col = "red")
+
+# Residuals vs Fitted for studentized residuals
+plot(fitted(fit), ri, main = "Residuals vs Fitted (Studentized)", xlab = "Fitted Values", ylab = "Studentized Residuals", pch = 20)
+abline(h = 0, col = "red")
+
+# Residuals vs Fitted for PRESS residuals
+plot(fitted(fit), e_PRESS, main = "Residuals vs Fitted (PRESS)", xlab = "Fitted Values", ylab = "PRESS Residuals", pch = 20)
+abline(h = 0, col = "red")
+
+# Residuals vs Fitted for R-student residuals
+plot(fitted(fit), ti, main = "Residuals vs Fitted (R-student)", xlab = "Fitted Values", ylab = "R-student Residuals", pch = 20)
+abline(h = 0, col = "red")
+```
+
+The QQ plots generally follow the normality line, suggesting that the residuals are roughly normally distributed, which supports the assumptions of regression. However, there are slight deviations, especially at the tails, which could point to potential outliers or influential points. These differences imply that although the model fits well overall, a few points may have a strong influence, potentially impacting model accuracy or revealing slight non-normality at the extremes.
+(e)
+```{r}
+PRESS=sum(e_PRESS^2)
+PRESS
+R2.pred=1-PRESS/(var(y)*(n-1))
+R2.pred
+```
+(from part a): This value of 0.5864 (or 58.64%) indicates that the model explains approximately 58.64% of the variance in the data, which suggests a moderate fit.
+(from part e): for prediction is 0.5480, which is slightly lower than the model's residual square but still positive. This suggests that the model retains some predictive power, explaining about 54.80% of the variance in new data, although it is somewhat less effective than on the training data.
+
+
+
+
+
+QUESTION 2
+
+(a)
+```{r}
+setwd("C:/Users/ifeak/Downloads")
+
+# Load the data
+data <- read.table("Assignment#3_Data_Prob2.txt", header=TRUE)
+attach(data)
+y <- data$y
+x <- data$x
+```
+
+(b)
+```{r}
+# Fit the linear regression model
+fit <- lm(y ~ x, data = data)
+
+# Display the summary of the model
+summary(fit)
+```
+```{r}
+plot(x, y, pch=20, main="Blood Pressure vs Age")
+abline(fit, col="red")
+```
+
+```{r}
+par(mfrow = c(2, 2))
+plot(fit$fitted.values, fit$residuals, xlab="Fitted Values", ylab="Residuals", main="Residuals vs Fitted Values")
+abline(h = 0, col="red")
+
+qqnorm(fit$residuals, main="Q-Q Plot of Residuals")
+qqline(fit$residuals, col="red")
+
+plot(x, fit$residuals, xlab="Age", ylab="Residuals", main="Residuals vs Age")
+abline(h = 0, col="red")
+```
+
+
+(c)
+Since the residual does not form an outward openening funnel, we see that there is no error variance, and there are no extreme outliers, though there is some mild deviation in the tails of the Q-Q plot, meaning the model is not inadequate so there would be no need for transformatiob.

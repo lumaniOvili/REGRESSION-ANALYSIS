@@ -1,0 +1,395 @@
+---
+title: "assignment2"
+author: "Ifeakachukwu Ovili"
+date: "2024-10-20"
+output: word_document
+---
+(a)
+
+```{r}
+# Load the data
+table.data=read.table("Assignment#2_Data_Prob1.txt", header=T)
+
+attach(table.data)
+
+n=length(y)
+
+
+# Scatter plot matrix
+pairs(table.data, main="Scatter Plot Matrix for y, x1, x2, x3, and x4")
+
+```
+
+(b)
+
+```{r}
+# Correlation matrix
+cor_matrix <- cor(table.data)
+print(cor_matrix)
+```
+
+(c)
+
+```{r}
+# Fit the linear regression model
+model <- lm(y ~ x1 + x2 + x3 + x4, table.data)
+k=4
+# Summary of the model
+summary(model)
+
+```
+
+(d)
+
+```{r}
+# Diagonal of the hat matrix
+hat_diag <- hatvalues(model)
+print(hat_diag)
+```
+
+(e)
+
+F-statistic: 15.82 on 4 and 42 DF,  p-value: 5.645e-08
+Since the p-value is extremely small, we reject the null hypothesis that all the regression coefficient are equals to zero (except the intercept), indicating that at least one of the predictor variables (x1, x2, x3 or x4) significantly contributes to explaining the variability in the total crime rate.
+
+
+(f)
+
+Multiple R-squared:  0.6011,	Adjusted R-squared:  0.5631 
+The model explains a substantial portion (about 60%) of the variability in the total crime rate, indicating a reasonable good fit. However, the difference between R^2 and adjusted R^2 suggests that some predictors may not be very useful. 
+
+(g)
+
+```{r}
+cor(table.data[, c("x1", "x2", "x3", "x4")])
+
+# Calculate R-squared values for each predictor regressed on the others
+R.squared.1 = summary(lm(x1 ~ x2 + x3 + x4, data = table.data))$r.squared
+VIF.x1 = 1 / (1 - R.squared.1)
+
+R.squared.2 = summary(lm(x2 ~ x1 + x3 + x4, data = table.data))$r.squared
+VIF.x2 = 1 / (1 - R.squared.2)
+
+R.squared.3 = summary(lm(x3 ~ x1 + x2 + x4, data = table.data))$r.squared
+VIF.x3 = 1 / (1 - R.squared.3)
+
+R.squared.4 = summary(lm(x4 ~ x1 + x2 + x3, data = table.data))$r.squared
+VIF.x4 = 1 / (1 - R.squared.4)
+
+# Print VIF values
+VIF.x1
+VIF.x2
+VIF.x3
+VIF.x4
+```
+
+x1 VIF=1.41 and the square root is approximately 1.19. This means the standard error of x1 is about 1.19 times larger than it would be if x1 were uncorrelated with the other predictor level indicating low multicollinearity.
+x2 VIF= 1.39 and the square root is approximately 1.18. This means that the standard error of x2 is 1.18 times larger than it would be without correlation with other predictors, suggesting low multicollinearity.
+x3 VIF= 1.66 and the square root is approximately 1.29. This means that the standard error for x3 is 1.29 times larger than it would be in the absence of multicollinearity, indicating some multicollinearity,
+x4 VIF= 1.62 and the square root is approximately 1.27. This means that the standard error for x4 is 1.27 times larger than it would be if x4 were not concerned with the other predictors.
+
+
+(h)
+
+```{r}
+#calculate the residual sum of sqaures
+SS.Res <- sum(residuals(model)^2)
+#calculate the mean sqaure of residuals
+n <- nrow(table.data)
+p <- length(coefficients(model))
+MS.Res <- SS.Res / (n - p)
+MS.Res
+#estimate the standrd deviation of errors
+sigma.hat <- sqrt(MS.Res)
+sigma.hat
+summary(model)$sigma
+```
+
+(i)
+
+```{r}
+#calculating the variance-covariance matrix
+x.matrix <- model.matrix(model)
+cov.beta.hat <- MS.Res * solve(t(x.matrix) %*% x.matrix)
+cov.beta.hat
+```
+
+(j)
+```{r}
+#finding the standard errors for each coefficient
+Se.beta0.hat <- sqrt(cov.beta.hat[1, 1])  # Standard error for the intercept
+Se.beta1.hat <- sqrt(cov.beta.hat[2, 2])  # Standard error for x1
+Se.beta2.hat <- sqrt(cov.beta.hat[3, 3])  # Standard error for x2
+Se.beta3.hat <- sqrt(cov.beta.hat[4, 4])  # Standard error for x3
+Se.beta4.hat <- sqrt(cov.beta.hat[5, 5])  # Standard error for x4
+
+# Print the standard errors
+Se.beta0.hat
+Se.beta1.hat
+Se.beta2.hat
+Se.beta3.hat
+Se.beta4.hat
+
+```
+
+(k)
+
+```{r}
+# Assuming your model is named 'model'
+summary_model <- summary(model)
+
+# Extract t-values and p-values
+t_values <- summary_model$coefficients[, "t value"]
+p_values <- summary_model$coefficients[, "Pr(>|t|)"]
+
+# Print t-values and p-values
+t_values
+p_values
+
+```
+Only the violent crime rate x1 is statistically significant, with a p-value well below 0.05. The other predictors x2, x3, x4 do not show significant contributions to the total crime rate at the 5% significance level. This suggests that the violent crime rate is the primary driver of overall crime rate in the model.
+
+(l)
+
+```{r}
+# Fit the linear model
+model <- lm(y ~ x1 + x2 + x3 + x4, data=table.data)
+
+# Extract the coefficient and standard error for x2
+beta_hat_x2 <- summary(model)$coefficients["x2", "Estimate"]
+se_beta_hat_x2 <- summary(model)$coefficients["x2", "Std. Error"]
+
+# Determine the degrees of freedom
+df <- nrow(table.data) - length(coef(model))
+
+# Find the critical value for a 99% confidence interval
+alpha <- 0.01
+t_critical <- qt(1 - alpha/2, df)
+
+# Calculate the 99% confidence interval for the coefficient of x2
+ci_lower <- beta_hat_x2 - t_critical * se_beta_hat_x2
+ci_upper <- beta_hat_x2 + t_critical * se_beta_hat_x2
+
+# Output the confidence interval
+confidence_interval<- cbind(ci_lower,ci_upper)
+confidence_interval
+```
+
+
+(m)
+```{r}
+# Define the new observation
+new_data <- data.frame(x1 = 350, x2 = 30, x3 = 5, x4 = 75)
+
+# Predict the mean response with a 95% confidence interval
+predict(model, newdata = new_data, interval = "confidence", level = 0.95)
+```
+
+(n)
+```{r}
+# Define the new observation
+new_data <- data.frame(x1 = 350, x2 = 30, x3 = 5, x4 = 75)
+
+# Predict the response with a 95% prediction interval
+predict(model, newdata = new_data, interval = "prediction", level = 0.95)
+```
+
+
+(o)
+```{r}
+# Total Sum of Squares
+SS.T <- sum((table.data$y - mean(table.data$y))^2)
+SS.T
+```
+```{r}
+# Fit models
+fit1 <- lm(y ~ x1, data = table.data)
+fit2 <- lm(y ~ x1 + x2, data = table.data)
+fit3 <- lm(y ~ x1 + x2 + x3, data = table.data)
+fit4 <- lm(y ~ x1 + x2 + x3 + x4, data = table.data)
+fit1
+fit2
+fit3
+fit4
+```
+```{r}
+# Calculate SSR
+SS.R.fit1 <- SS.T - sum(residuals(fit1)^2)
+SS.R.fit2 <- SS.T - sum(residuals(fit2)^2)
+SS.R.fit3 <- SS.T - sum(residuals(fit3)^2)
+SS.R.fit4 <- SS.T - sum(residuals(fit4)^2)
+
+# Print SSR values
+SS.R.fit1
+SS.R.fit2
+SS.R.fit3
+SS.R.fit4
+```
+```{r}
+# Calculate the additional SSR components
+SS.R.x2 <- SS.R.fit2 - SS.R.fit1
+SS.R.x3 <- SS.R.fit3 - SS.R.fit2
+SS.R.x4 <- SS.R.fit4 - SS.R.fit3
+
+# Print additional SSR values
+SS.R.x2
+SS.R.x3
+SS.R.x4
+```
+
+```{r}
+# Significance values 
+alpha <- 0.05
+df1 <- 1
+df2_fit2 <- df.residual(fit2)
+df2_fit3 <- df.residual(fit3)
+df2_fit4 <- df.residual(fit4)
+df2_fit2
+df2_fit3
+df2_fit4
+```
+```{r}
+qf(1 - alpha, df1, df1)
+qf(1 - alpha, df1, df2_fit2)
+qf(1 - alpha, df1, df2_fit3)
+qf(1 - alpha, df1, df2_fit4)
+```
+
+(p)
+
+```{r}
+# Fit the full model with x1, x2, x3, and x4
+full_model <- lm(y ~ x1 + x2 + x3 + x4, data = table.data)
+
+# Fit the reduced model with x1, x2, and x3
+reduced_model <- lm(y ~ x1 + x2 + x3, data = table.data)
+
+# Get the sum of squares for both models
+SS_full <- sum(residuals(full_model)^2)
+SS_reduced <- sum(residuals(reduced_model)^2)
+
+# Degrees of freedom
+df_full <- df.residual(full_model)
+df_reduced <- df.residual(reduced_model)
+
+# F-test statistic
+F_statistic <- ((SS_reduced - SS_full) / (df_reduced - df_full)) / (SS_full / df_full)
+
+# p-value for the F-test
+p_value <- 1 - pf(F_statistic, df_reduced - df_full, df_full)
+
+# Print results
+F_statistic
+p_value
+
+```
+
+
+(q)
+```{r}
+# Fit the full model with x1, x2, x3, and x4
+full_model <- lm(y ~ x1 + x2 + x3 + x4, data = table.data)
+
+# Fit the reduced model with x1 and x2
+reduced_model <- lm(y ~ x1 + x2, data = table.data)
+
+# Get the sum of squares for both models
+SS_full <- sum(residuals(full_model)^2)
+SS_reduced <- sum(residuals(reduced_model)^2)
+
+# Calculate the ESS (Extra Sum of Squares)
+ESS <- SS_reduced - SS_full
+
+# Degrees of freedom
+df_full <- df.residual(full_model)
+df_reduced <- df.residual(reduced_model)
+
+# F-test statistic
+F_statistic <- (ESS / (df_reduced - df_full)) / (SS_full / df_full)
+
+# p-value for the F-test
+p_value <- 1 - pf(F_statistic, df_reduced - df_full, df_full)
+
+# Print results
+F_statistic
+p_value
+```
+
+
+(r)
+```{r}
+# Fit the model with x1 and x2
+model_x1_x2 <- lm(y ~ x1 + x2, data = table.data)
+
+# Fit the full model with x1, x2, x3, and x4
+full_model <- lm(y ~ x1 + x2 + x3 + x4, data = table.data)
+
+# Get adjusted R-squared values for both models
+adj_r2_x1_x2 <- summary(model_x1_x2)$adj.r.squared
+adj_r2_full <- summary(full_model)$adj.r.squared
+
+# Print adjusted R-squared values
+adj_r2_x1_x2
+adj_r2_full
+```
+We can remove the predictors from model c.
+
+
+
+
+
+I did the question 2 part here simply because it was convenient. I learnt the math latex for fun while studying for my Stat Computing I midterm. If you would prefer I wrote it out, please let me know as against next assignment. 
+
+
+Consider the multiple linear regression model:
+$$
+y = X\beta + \epsilon
+$$
+where:
+- \(y\) is an \(n \times 1\) vector of observed values.
+- \(X\) is an \(n \times p\) matrix of predictor variables.
+- \(\beta\) is a \(p \times 1\) vector of regression coefficients.
+- \(\epsilon\) is an \(n \times 1\) vector of random errors.
+
+The least-squares estimator \(\hat{\beta}\) is obtained by minimizing the residual sum of squares (SSRes):
+$$
+\text{SSRes} = (y - X\beta)'(y - X\beta)
+$$
+
+The normal equations for minimizing the RSS are:
+$$
+X'X\hat{\beta} = X'y
+$$
+Solving for \(\hat{\beta}\), we get:
+$$
+\hat{\beta} = (X'X)^{-1}X'y
+$$
+
+Now, substitute the expression for \(y\) from the original model:
+$$
+\hat{\beta} = (X'X)^{-1}X'(X\beta + \epsilon)
+$$
+Expanding the right-hand side, we have:
+$$
+\hat{\beta} = (X'X)^{-1}X'X\beta + (X'X)^{-1}X'\epsilon
+$$
+
+Notice that \((X'X)^{-1}X'X = I\), where \(I\) is the identity matrix. Therefore, the expression simplifies to:
+$$
+\hat{\beta} = \beta + (X'X)^{-1}X'\epsilon
+$$
+
+Let:
+$$
+R = (X'X)^{-1}X'
+$$
+Thus, we can rewrite the equation as:
+$$
+\hat{\beta} = \beta + R\epsilon
+$$
+
+This shows that the least-squares estimator can be expressed as:
+$$
+\hat{\beta} = \beta + R\epsilon
+$$
+where \(R = (X'X)^{-1}X'\).
